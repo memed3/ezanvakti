@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#05101f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Namaz">
+<meta name="application-name" content="Namaz Vakitleri">
+<meta name="description" content="Diyanet İşleri Başkanlığı resmi ezan vakitleri">
+<title>Namaz Vakitleri</title>
+
+<script>
+// İkonu canvas ile üret, localStorage'a kaydet, her açılışta tekrar kullan
+function generateIconDataURL(size) {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createRadialGradient(size*.35,size*.25,0,size*.5,size*.5,size*.7);
+    grad.addColorStop(0,'#0d2a50'); grad.addColorStop(1,'#05101f');
+    ctx.fillStyle=grad; ctx.fillRect(0,0,size,size);
+    const cx=size*.38,cy=size*.32,r=size*.18;
+    ctx.fillStyle='#c9a84c';
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#061525';
+    ctx.beginPath();ctx.arc(cx+r*.35,cy-r*.1,r*.82,0,Math.PI*2);ctx.fill();
+    const sx=cx+r*1.1,sy=cy-r*.6,sr=size*.055;
+    ctx.fillStyle='#c9a84c';
+    ctx.save();ctx.translate(sx,sy);ctx.beginPath();
+    for(let i=0;i<5;i++){const a=i*Math.PI*2/5-Math.PI/2,ia=a+Math.PI/5;ctx.lineTo(Math.cos(a)*sr,Math.sin(a)*sr);ctx.lineTo(Math.cos(ia)*sr*.4,Math.sin(ia)*sr*.4);}
+    ctx.closePath();ctx.fill();ctx.restore();
+    ctx.fillStyle='#c9a84c';ctx.globalAlpha=0.85;
+    ctx.beginPath();ctx.arc(size*.5,size*.72,size*.14,Math.PI,0);ctx.fill();
+    ctx.fillRect(size*.36,size*.72,size*.28,size*.14);
+    ctx.fillRect(size*.3,size*.6,size*.055,size*.26);
+    ctx.fillRect(size*.645,size*.6,size*.055,size*.26);
+    ctx.beginPath();ctx.arc(size*.327,size*.6,size*.028,Math.PI,0);ctx.fill();
+    ctx.beginPath();ctx.arc(size*.673,size*.6,size*.028,Math.PI,0);ctx.fill();
+    ctx.beginPath();ctx.arc(size*.5,size*.66,size*.06,Math.PI,0);ctx.fill();
+    ctx.globalAlpha=1;
+    return canvas.toDataURL('image/png');
+  } catch(e){ return ''; }
+}
+
+function getOrCreateIcon(size) {
+  const key = 'namaz_icon_' + size;
+  try {
+    const cached = localStorage.getItem(key);
+    if(cached) return cached;
+  } catch(e){}
+  const dataUrl = generateIconDataURL(size);
+  try { localStorage.setItem(key, dataUrl); } catch(e){}
+  return dataUrl;
+}
+
+// Manifest'i data URI olarak göm — blob URL aksine tarayıcı yeniden başlatmada geçerli kalır
+function setupPWA() {
+  try {
+    const icon192 = getOrCreateIcon(192);
+    const icon512 = getOrCreateIcon(512);
+    const icon180 = getOrCreateIcon(180);
+
+    const manifest = {
+      name: "Namaz Vakitleri",
+      short_name: "Namaz",
+      description: "Diyanet resmi ezan vakitleri",
+      start_url: location.href,
+      display: "standalone",
+      background_color: "#05101f",
+      theme_color: "#05101f",
+      orientation: "portrait",
+      icons: [
+        { src: icon192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+        { src: icon512, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+      ]
+    };
+
+    // data: URI — tarayıcı kapanıp açılsa bile geçerli
+    const manifestURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+    const link = document.createElement('link');
+    link.rel = 'manifest'; link.href = manifestURI;
+    document.head.appendChild(link);
+
+    // Apple touch icon
+    const apple = document.createElement('link');
+    apple.rel = 'apple-touch-icon'; apple.href = icon180;
+    document.head.appendChild(apple);
+  } catch(e){}
+}
+
+document.addEventListener('DOMContentLoaded', setupPWA);
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Noto+Serif:wght@400;500&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#c9a84c; --gold-light:#e8c97a; --gold-dim:#7a5e2a;
+    --bg-deep:#05101f; --bg-card:#0d1e35; --bg-panel:#112340;
+    --text-main:#e8dfc8; --text-dim:#8a9ab5; --text-bright:#f5edd8;
+    --sky1:#0d2a50; --sky2:#060f1e;
+  }
+  body.tema-yesil {
+    --gold:#4caf82; --gold-light:#7dd4a8; --gold-dim:#2a6648;
+    --bg-deep:#031a0f; --bg-card:#0a2418; --bg-panel:#0f2e1e;
+    --text-main:#d4edda; --text-dim:#7aab90; --text-bright:#eaf7ee;
+    --sky1:#0a2e1a; --sky2:#031408;
+  }
+  body.tema-mor {
+    --gold:#b07fe8; --gold-light:#d0a8f5; --gold-dim:#6a3d9a;
+    --bg-deep:#0d0520; --bg-card:#180d35; --bg-panel:#201045;
+    --text-main:#e8d8f5; --text-dim:#9a80b5; --text-bright:#f5eeff;
+    --sky1:#1a0a40; --sky2:#080318;
+  }
+  body.tema-toprak {
+    --gold:#d4936a; --gold-light:#edb990; --gold-dim:#8a5a3a;
+    --bg-deep:#160a02; --bg-card:#261508; --bg-panel:#321c0a;
+    --text-main:#f0dcc8; --text-dim:#a08070; --text-bright:#faf0e6;
+    --sky1:#2a1205; --sky2:#100602;
+  }
+  body.tema-bej {
+    --gold:#8a6d3a; --gold-light:#b8924e; --gold-dim:#c4a97a;
+    --bg-deep:#f5efe6; --bg-card:#ede4d6; --bg-panel:#e4d8c4;
+    --text-main:#3a2e1e; --text-dim:#7a6a54; --text-bright:#1a1008;
+    --sky1:#d4c4a8; --sky2:#c0ae90;
+  }
+  body.tema-kirmizi {
+    --gold:#e87a6a; --gold-light:#f5a898; --gold-dim:#8a3a2e;
+    --bg-deep:#150404; --bg-card:#240a08; --bg-panel:#2e0e0a;
+    --text-main:#f5dcd8; --text-dim:#b08078; --text-bright:#fff0ee;
+    --sky1:#2a0808; --sky2:#0f0202;
+  }
+  /* Theme switcher */
+  .theme-bar { display:flex; align-items:center; justify-content:center; gap:10px; padding:8px 20px 14px; }
+  .theme-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dim); margin-right:2px; }
+  .theme-dot { width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:all .2s; box-shadow:0 2px 8px rgba(0,0,0,.4); }
+  .theme-dot:active { transform:scale(.88); }
+  .theme-dot.active { border-color:#fff; transform:scale(1.18); box-shadow:0 0 0 3px rgba(255,255,255,.25); }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family:'Noto Serif',serif; background:var(--bg-deep); color:var(--text-main); min-height:100vh; transition:background .4s,color .4s; }
+  .sky-bg { position:fixed; inset:0; background:radial-gradient(ellipse at 30% 0%,var(--sky1) 0%,var(--sky2) 60%); z-index:0; transition:background .5s; }
+  .stars { position:fixed; inset:0; z-index:0; overflow:hidden; }
+  .star { position:absolute; background:#fff; border-radius:50%; animation:twinkle var(--d) ease-in-out infinite alternate; opacity:0; }
+  @keyframes twinkle { 0%{opacity:.1;transform:scale(1)} 100%{opacity:.7;transform:scale(1.3)} }
+  .mosque { position:fixed; bottom:0; left:0; right:0; height:90px; z-index:1; background:var(--bg-deep);
+    mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 90'%3E%3Cpath d='M0,90 L0,60 L22,60 L22,45 L32,45 L32,34 L36,29 L39,15 L41,29 L44,34 L44,45 L54,45 L54,60 L75,60 L75,53 L85,53 L85,43 L100,43 L100,36 L103,31 L107,14 L109,6 L111,14 L114,31 L116,36 L116,43 L130,43 L130,53 L142,53 L142,60 L162,60 L162,43 L165,36 L172,22 L176,14 L178,10 L180,14 L184,22 L188,36 L190,43 L190,60 L210,60 L210,53 L222,53 L222,43 L235,43 L235,36 L238,31 L242,14 L244,6 L246,14 L249,31 L251,36 L251,43 L263,43 L263,53 L275,53 L275,60 L298,60 L298,45 L302,38 L308,24 L310,34 L315,38 L317,45 L317,60 L345,60 L345,43 L348,36 L354,22 L356,32 L361,36 L363,43 L363,60 L400,60 L400,90 Z'/%3E%3C/svg%3E");
+    -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 90'%3E%3Cpath d='M0,90 L0,60 L22,60 L22,45 L32,45 L32,34 L36,29 L39,15 L41,29 L44,34 L44,45 L54,45 L54,60 L75,60 L75,53 L85,53 L85,43 L100,43 L100,36 L103,31 L107,14 L109,6 L111,14 L114,31 L116,36 L116,43 L130,43 L130,53 L142,53 L142,60 L162,60 L162,43 L165,36 L172,22 L176,14 L178,10 L180,14 L184,22 L188,36 L190,43 L190,60 L210,60 L210,53 L222,53 L222,43 L235,43 L235,36 L238,31 L242,14 L244,6 L246,14 L249,31 L251,36 L251,43 L263,43 L263,53 L275,53 L275,60 L298,60 L298,45 L302,38 L308,24 L310,34 L315,38 L317,45 L317,60 L345,60 L345,43 L348,36 L354,22 L356,32 L361,36 L363,43 L363,60 L400,60 L400,90 Z'/%3E%3C/svg%3E");
+    mask-size:100% 100%; -webkit-mask-size:100% 100%; }
+  .app { position:relative; z-index:2; max-width:480px; margin:0 auto; padding:0 0 110px; }
+
+  /* Header */
+  .header { padding:20px 20px 16px; text-align:center; position:relative; }
+  .header::after { content:''; position:absolute; bottom:0; left:20%; right:20%; height:1px; background:linear-gradient(90deg,transparent,var(--gold-dim),transparent); }
+  .bismillah { font-family:'Amiri',serif; font-size:22px; color:var(--gold-light); letter-spacing:2px; margin-bottom:6px; text-shadow:0 0 20px rgba(201,168,76,.4); }
+  .app-title { font-family:'Cinzel',serif; font-size:11px; letter-spacing:5px; text-transform:uppercase; color:var(--text-dim); }
+
+  /* Loading / Error */
+  .city-controls select {
+    background:var(--bg-card); border:1px solid rgba(201,168,76,.2); color:var(--text-main);
+    padding:10px 28px 10px 12px; border-radius:10px; font-family:'Noto Serif',serif; font-size:13px;
+    appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23c9a84c'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center; cursor:pointer; width:100%;
+  }
+  .city-controls select:disabled { opacity:.5; }
+  .city-controls select:focus { outline:none; border-color:var(--gold); }
+  .fetch-btn {
+    grid-column:1/-1; background:linear-gradient(135deg,#c9a84c 0%,#e8c97a 50%,#c9a84c 100%);
+    color:#0a0e17; border:none; padding:13px; border-radius:10px;
+    font-family:'Cinzel',serif; font-size:13px; font-weight:600; letter-spacing:2px;
+    cursor:pointer; transition:all .2s; box-shadow:0 4px 20px rgba(201,168,76,.3);
+  }
+  .fetch-btn:active { transform:scale(.97); }
+  .fetch-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+  /* Date & nav */
+  .date-section { padding:12px 20px; display:flex; justify-content:space-between; align-items:center; }
+  .date-hijri { font-family:'Amiri',serif; font-size:15px; color:var(--gold-light); }
+  .date-miladi { font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .day-nav { display:flex; align-items:center; justify-content:center; gap:20px; padding:4px 20px 12px; }
+  .day-btn { background:var(--bg-card); border:1px solid rgba(201,168,76,.2); color:var(--gold); width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+  .day-btn:active { background:rgba(201,168,76,.15); transform:scale(.93); }
+  .day-label { font-family:'Cinzel',serif; font-size:13px; color:var(--text-main); letter-spacing:1px; min-width:70px; text-align:center; }
+
+  /* Countdown */
+  .countdown-card {
+    margin:0 20px 14px; background:var(--bg-card); border:1px solid rgba(201,168,76,.25);
+    border-radius:16px; padding:14px 20px; display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 8px 32px rgba(0,0,0,.5); position:relative; overflow:hidden;
+  }
+  .countdown-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+  .countdown-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px; }
+  .countdown-name { font-family:'Cinzel',serif; font-size:15px; color:var(--gold-light); }
+  .countdown-time { font-family:'Cinzel',serif; font-size:30px; font-weight:600; color:var(--text-bright); letter-spacing:2px; text-shadow:0 0 30px rgba(201,168,76,.3); }
+
+  /* Prayers */
+  .prayers-section { padding:0 20px; }
+  .prayer-list { display:flex; flex-direction:column; gap:8px; }
+  .prayer-card {
+    background:var(--bg-card); border:1px solid rgba(255,255,255,.06); border-radius:14px;
+    padding:13px 16px; display:flex; align-items:center; gap:12px;
+    position:relative; overflow:hidden;
+    animation:slideUp .4s ease forwards; opacity:0;
+  }
+  .prayer-card:nth-child(1){animation-delay:.05s} .prayer-card:nth-child(2){animation-delay:.1s}
+  .prayer-card:nth-child(3){animation-delay:.15s} .prayer-card:nth-child(4){animation-delay:.2s}
+  .prayer-card:nth-child(5){animation-delay:.25s} .prayer-card:nth-child(6){animation-delay:.3s}
+  @keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .prayer-card.active { background:rgba(201,168,76,.12); border-color:rgba(201,168,76,.5); box-shadow:0 0 20px rgba(201,168,76,.12); }
+  .prayer-card.active::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--gold); border-radius:2px 0 0 2px; }
+  .prayer-card.passed { opacity:.4; }
+  .prayer-icon { width:42px; height:42px; border-radius:11px; background:var(--bg-panel); display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; border:1px solid rgba(201,168,76,.12); }
+  .prayer-card.active .prayer-icon { background:rgba(201,168,76,.15); border-color:rgba(201,168,76,.4); }
+  .prayer-info { flex:1; }
+  .prayer-name-tr { font-family:'Cinzel',serif; font-size:15px; color:var(--text-bright); margin-bottom:2px; }
+  .prayer-card.active .prayer-name-tr { color:var(--gold-light); }
+  .prayer-name-ar { font-family:'Amiri',serif; font-size:13px; color:var(--text-dim); }
+  .prayer-time-wrap { text-align:right; }
+  .prayer-time { font-family:'Cinzel',serif; font-size:20px; font-weight:600; color:var(--text-main); letter-spacing:1px; display:block; }
+  .prayer-card.active .prayer-time { color:var(--gold-light); text-shadow:0 0 15px rgba(201,168,76,.4); }
+  .now-badge { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); display:block; margin-top:2px; }
+
+  /* Bildirim butonu */
+  .notif-bar { display:flex; align-items:center; justify-content:center; gap:8px; padding:0 20px 12px; }
+  .notif-btn {
+    display:flex; align-items:center; gap:7px;
+    background:var(--bg-card); border:1px solid rgba(201,168,76,.2);
+    color:var(--text-dim); padding:8px 16px; border-radius:20px;
+    font-family:'Noto Serif',serif; font-size:12px; cursor:pointer; transition:all .2s;
+  }
+  .notif-btn.aktif { border-color:rgba(201,168,76,.5); color:var(--gold-light); background:rgba(201,168,76,.08); }
+  .notif-btn:active { transform:scale(.96); }
+  .notif-dot { width:8px; height:8px; border-radius:50%; background:var(--text-dim); transition:background .3s; }
+  .notif-btn.aktif .notif-dot { background:var(--gold); box-shadow:0 0 6px var(--gold); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* Şehir paneli — katlanabilir */
+  .city-section { padding:0 20px 12px; overflow:hidden; transition:max-height .35s ease, opacity .3s; }
+  .city-section.gizli { max-height:0; opacity:0; padding:0 20px; pointer-events:none; }
+  .city-section.acik  { max-height:200px; opacity:1; }
+  .city-label { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; }
+  .city-toggle {
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    padding:4px 20px 10px; cursor:pointer;
+  }
+  .city-toggle-txt { font-size:11px; color:var(--text-dim); letter-spacing:1px; text-decoration:underline; text-underline-offset:3px; }
+  .city-toggle-txt:active { color:var(--gold); }
+  .city-controls { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .loading { text-align:center; padding:40px 20px; }
+  .loading-ring { width:40px; height:40px; border:2px solid rgba(201,168,76,.2); border-top-color:var(--gold); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 16px; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .loading-text { font-size:13px; color:var(--text-dim); }
+  .error-msg { margin:0 20px; padding:14px 16px; background:rgba(180,60,60,.15); border:1px solid rgba(180,60,60,.3); border-radius:12px; font-size:13px; color:#e88; text-align:center; line-height:1.6; }
+  .ornament { text-align:center; padding:14px 0; color:var(--gold-dim); font-size:16px; letter-spacing:8px; }
+  ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="sky-bg"></div>
+<div class="stars" id="stars"></div>
+<div class="mosque"></div>
+
+<div class="app">
+  <div class="header">
+    <div class="bismillah">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيمِ</div>
+    <div class="app-title">Namaz Vakitleri — Diyanet</div>
+  </div>
+
+  <!-- Tema Seçici -->
+  <div class="theme-bar">
+    <span class="theme-lbl">🎨</span>
+    <div class="theme-dot active" data-tema="" style="background:linear-gradient(135deg,#0d2a50,#1a4a7a)" title="Gece Mavisi" onclick="setTema(this,'')"></div>
+    <div class="theme-dot" data-tema="tema-yesil" style="background:linear-gradient(135deg,#0a2e1a,#1a6640)" title="Zümrüt" onclick="setTema(this,'tema-yesil')"></div>
+    <div class="theme-dot" data-tema="tema-mor" style="background:linear-gradient(135deg,#1a0a40,#5a2a90)" title="Mor Gece" onclick="setTema(this,'tema-mor')"></div>
+    <div class="theme-dot" data-tema="tema-toprak" style="background:linear-gradient(135deg,#2a1205,#8a4820)" title="Toprak" onclick="setTema(this,'tema-toprak')"></div>
+    <div class="theme-dot" data-tema="tema-bej" style="background:linear-gradient(135deg,#e4d8c4,#c8b890)" title="Aydınlık" onclick="setTema(this,'tema-bej')"></div>
+    <div class="theme-dot" data-tema="tema-kirmizi" style="background:linear-gradient(135deg,#2a0808,#8a2010)" title="Koyu Kırmızı" onclick="setTema(this,'tema-kirmizi')"></div>
+  </div>
+
+  <!-- Bildirim butonu -->
+  <div class="notif-bar">
+    <button class="notif-btn" id="notifBtn" onclick="toggleBildirim()">
+      <span class="notif-dot"></span>
+      <span id="notifTxt">Vakit Bildirimleri Kapat</span>
+    </button>
+  </div>
+
+  <!-- Şehir paneli (kaydedilmiş varsa gizli başlar) -->
+  <div class="city-section gizli" id="citySection">
+    <div class="city-label">📍 Konum Seçin</div>
+    <div class="city-controls">
+      <select id="ilSelect" onchange="onIlChange()">
+        <option value="">İl yükleniyor...</option>
+      </select>
+      <select id="ilceSelect" disabled onchange="onIlceChange()">
+        <option value="">İlçe seçin...</option>
+      </select>
+      <button class="fetch-btn" id="fetchBtn" onclick="fetchVakitler()" disabled>VAKİTLERİ GETİR</button>
+    </div>
+  </div>
+  <div class="city-toggle" id="cityToggle" onclick="toggleCityPanel()">
+    <span class="city-toggle-txt" id="cityToggleTxt">📍 Şehri Değiştir</span>
+  </div>
+
+  <div id="content">
+    <div class="loading" style="opacity:.4"><div class="loading-text">İl seçerek başlayın</div></div>
+  </div>
+</div>
+
+<script>
+// Stars
+const se = document.getElementById('stars');
+for(let i=0;i<70;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*2.5+.5;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*72}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*5}s`;se.appendChild(s);}
+
+const BASE = 'https://ezanvakti.emushaf.net';
+let allVakitler=[], offsetDays=0, countdownInterval=null, ilName='', ilceName='';
+let bildirimTimeouts=[];
+
+// ─── localStorage ──────────────────────────────────────────
+function saveSelection(ilId,ilText,ilceId,ilceText){
+  try{localStorage.setItem('namaz_il',JSON.stringify({id:ilId,text:ilText}));
+      localStorage.setItem('namaz_ilce',JSON.stringify({id:ilceId,text:ilceText}));}catch(e){}
+}
+function loadSavedSelection(){
+  try{const il=JSON.parse(localStorage.getItem('namaz_il')||'null');
+      const ilce=JSON.parse(localStorage.getItem('namaz_ilce')||'null');
+      return(il&&ilce)?{il,ilce}:null;}catch(e){return null;}
+}
+
+// ─── Şehir paneli ──────────────────────────────────────────
+function toggleCityPanel(){
+  const sec=document.getElementById('citySection');
+  const lbl=document.getElementById('cityToggleTxt');
+  if(sec.classList.contains('acik')){sec.classList.remove('acik');sec.classList.add('gizli');lbl.textContent='📍 Şehri Değiştir';}
+  else{sec.classList.remove('gizli');sec.classList.add('acik');lbl.textContent='✕ Kapat';}
+}
+function showCityPanel(){const sec=document.getElementById('citySection');sec.classList.remove('gizli');sec.classList.add('acik');document.getElementById('cityToggleTxt').textContent='✕ Kapat';}
+function hideCityPanel(){const sec=document.getElementById('citySection');sec.classList.remove('acik');sec.classList.add('gizli');document.getElementById('cityToggleTxt').textContent='📍 Şehri Değiştir';}
+
+// ─── Bildirim ──────────────────────────────────────────────
+function getBildirimAyar(){try{return localStorage.getItem('namaz_bildirim')!=='kapali';}catch(e){return true;}}
+function saveBildirimAyar(a){try{localStorage.setItem('namaz_bildirim',a?'acik':'kapali');}catch(e){}}
+function updateNotifUI(){
+  const aktif=getBildirimAyar()&&Notification.permission==='granted';
+  const btn=document.getElementById('notifBtn');
+  const txt=document.getElementById('notifTxt');
+  if(!btn)return;
+  if(aktif){btn.classList.add('aktif');txt.textContent='🔔 Bildirimler Açık';}
+  else{btn.classList.remove('aktif');txt.textContent='🔕 Bildirimleri Aç';}
+}
+async function toggleBildirim(){
+  if(Notification.permission==='denied'){alert('Bildirim izni reddedilmiş. Tarayıcı ayarlarından izin verin.');return;}
+  if(Notification.permission==='default'){const p=await Notification.requestPermission();if(p!=='granted'){updateNotifUI();return;}}
+  const yeni=!getBildirimAyar();
+  saveBildirimAyar(yeni);updateNotifUI();
+  if(yeni&&allVakitler.length){ planBildirimler(); baslatKaliciBildirim(); }
+  else { bildirimTimeouts.forEach(clearTimeout); durdurKaliciBildirim(); }
+}
+function planBildirimler(){
+  bildirimTimeouts.forEach(clearTimeout);bildirimTimeouts=[];
+  if(!getBildirimAyar()||Notification.permission!=='granted'||!allVakitler.length)return;
+  const v=allVakitler[getTodayIdx()];if(!v)return;
+  const prayers=[
+    {key:'Imsak',tr:'İmsak'},{key:'Gunes',tr:'Güneş'},
+    {key:'Ogle',tr:'Öğle'},{key:'Ikindi',tr:'İkindi'},
+    {key:'Aksam',tr:'Akşam'},{key:'Yatsi',tr:'Yatsı'},
+  ];
+  const now=new Date();
+  prayers.forEach(p=>{
+    const t=v[p.key];if(!t)return;
+    const[h,m]=t.split(':').map(Number);
+    const vt=new Date();vt.setHours(h,m,0,0);
+    const diff=vt-now;
+    if(diff>0)bildirimTimeouts.push(setTimeout(()=>{
+      new Notification(`🕌 ${p.tr} Vakti`,{body:`Saat ${t} — Hayırlı namazlar 🤲`,tag:p.key,silent:false});
+    },diff));
+    const d10=diff-10*60*1000;
+    if(d10>0)bildirimTimeouts.push(setTimeout(()=>{
+      new Notification(`⏰ ${p.tr} Vaktine 10 Dakika`,{body:`Saat ${t}'de ${p.tr} vakti girecek.`,tag:p.key+'_10'});
+    },d10));
+  });
+}
+
+// ─── Kalıcı bildirim çubuğu ────────────────────────────────
+let kaliciBildirimInterval = null;
+
+function kaliciBildirimGuncelle() {
+  if(!getBildirimAyar() || Notification.permission !== 'granted' || !allVakitler.length) return;
+  const v = allVakitler[getTodayIdx()];
+  if(!v) return;
+
+  const prayers = [
+    {key:'Imsak',tr:'İmsak'},{key:'Gunes',tr:'Güneş'},
+    {key:'Ogle',tr:'Öğle'},{key:'Ikindi',tr:'İkindi'},
+    {key:'Aksam',tr:'Akşam'},{key:'Yatsi',tr:'Yatsı'},
+  ];
+
+  const now = new Date();
+  const nowM = now.getHours()*60 + now.getMinutes();
+  const pMins = prayers.map(p => {
+    const t = v[p.key]; if(!t) return 0;
+    const[h,m]=t.split(':').map(Number); return h*60+m;
+  });
+
+  // Şu anki vakit
+  let aktifIdx = -1;
+  for(let i=pMins.length-1;i>=0;i--){ if(nowM>=pMins[i]){aktifIdx=i;break;} }
+  const nextIdx = aktifIdx < 5 ? aktifIdx+1 : 0;
+  const nextP = prayers[nextIdx];
+  const nextT = v[nextP.key];
+
+  // Geri sayım hesapla
+  let geriSayim = '';
+  if(nextT) {
+    const[th,tm]=nextT.split(':').map(Number);
+    const target=new Date(); target.setHours(th,tm,0,0);
+    if(target<=now) target.setDate(target.getDate()+1);
+    const diff=target-now;
+    const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
+    geriSayim = h>0 ? `${h} saat ${m} dk` : `${m} dk`;
+  }
+
+  const aktifP = aktifIdx>=0 ? prayers[aktifIdx] : null;
+  const aktifT = aktifIdx>=0 ? v[prayers[aktifIdx].key] : '';
+
+  const baslik = aktifP
+    ? `🕌 ${aktifP.tr} Vakti${aktifT ? ' • '+aktifT : ''}`
+    : '🕌 Namaz Vakitleri';
+  const icerik = nextT
+    ? `⏳ ${nextP.tr} vaktine ${geriSayim} kaldı (${nextT}) — ${ilceName||ilName}`
+    : `📍 ${ilceName||ilName}`;
+
+  // "persistent" bildirim — tag ile aynı bildirimi günceller, kapatılmaz
+  try {
+    new Notification(baslik, {
+      body: icerik,
+      tag: 'namaz-kalici',   // aynı tag → eski bildirimi günceller
+      requireInteraction: true, // kullanıcı kapatana kadar durur (Android'de kalıcı)
+      silent: true,          // ses çıkarmaz
+      renotify: false,
+    });
+  } catch(e){}
+}
+
+function baslatKaliciBildirim() {
+  if(kaliciBildirimInterval) clearInterval(kaliciBildirimInterval);
+  kaliciBildirimGuncelle();
+  // Her dakika güncelle
+  kaliciBildirimInterval = setInterval(kaliciBildirimGuncelle, 60*1000);
+}
+
+function durdurKaliciBildirim() {
+  if(kaliciBildirimInterval) clearInterval(kaliciBildirimInterval);
+  kaliciBildirimInterval = null;
+}
+async function loadIller(){
+  try{
+    const r=await fetch(`${BASE}/sehirler/2`);const d=await r.json();
+    const sel=document.getElementById('ilSelect');
+    sel.innerHTML='<option value="">İl seçin...</option>';
+    d.forEach(il=>{const o=document.createElement('option');o.value=il.SehirID;o.textContent=il.SehirAdi;sel.appendChild(o);});
+    const saved=loadSavedSelection();
+    if(saved){sel.value=saved.il.id;if(sel.value){ilName=saved.il.text;await loadIlceler(saved.il.id,saved.ilce.id);}}
+    else showCityPanel();
+  }catch(e){document.getElementById('ilSelect').innerHTML='<option value="">Hata</option>';showError('İller yüklenemedi.');showCityPanel();}
+}
+async function loadIlceler(ilId,autoIlceId=null){
+  const ilceSel=document.getElementById('ilceSelect');
+  document.getElementById('fetchBtn').disabled=true;
+  ilceSel.innerHTML='<option value="">Yükleniyor...</option>';ilceSel.disabled=true;
+  try{
+    const r=await fetch(`${BASE}/ilceler/${ilId}`);const d=await r.json();
+    ilceSel.innerHTML='<option value="">İlçe seçin...</option>';
+    d.forEach(ilce=>{const o=document.createElement('option');o.value=ilce.IlceID;o.textContent=ilce.IlceAdi;ilceSel.appendChild(o);});
+    ilceSel.disabled=false;
+    if(autoIlceId){ilceSel.value=autoIlceId;if(ilceSel.value){
+      const saved=loadSavedSelection();
+      ilceName=saved?.ilce?.text||ilceSel.options[ilceSel.selectedIndex]?.text||'';
+      document.getElementById('fetchBtn').disabled=false;
+      await fetchVakitler(true);
+    }}
+  }catch(e){ilceSel.innerHTML='<option value="">Hata</option>';showError('İlçeler yüklenemedi.');}
+}
+async function onIlChange(){
+  const sel=document.getElementById('ilSelect');ilName=sel.options[sel.selectedIndex]?.text||'';
+  if(!sel.value)return;await loadIlceler(sel.value);
+}
+function onIlceChange(){
+  const sel=document.getElementById('ilceSelect');
+  ilceName=sel.options[sel.selectedIndex]?.text||'';
+  document.getElementById('fetchBtn').disabled=!sel.value;
+}
+async function fetchVakitler(otoMatik=false){
+  const ilceSel=document.getElementById('ilceSelect');const id=ilceSel.value;if(!id)return;
+  const ilSel=document.getElementById('ilSelect');
+  if(ilSel.value)ilName=ilSel.options[ilSel.selectedIndex]?.text||ilName;
+  ilceName=ilceSel.options[ilceSel.selectedIndex]?.text||ilceName;
+  saveSelection(ilSel.value,ilName,id,ilceName);
+  if(!otoMatik)hideCityPanel();
+  offsetDays=0;showLoading('Vakitler yükleniyor...');
+  try{
+    const r=await fetch(`${BASE}/vakitler/${id}`);
+    if(!r.ok)throw new Error(`Sunucu hatası: ${r.status}`);
+    allVakitler=await r.json();
+    if(!allVakitler?.length)throw new Error('Veri boş geldi');
+    renderContent();
+    if(getBildirimAyar()&&Notification.permission==='granted'){ planBildirimler(); baslatKaliciBildirim(); }
+    else if(getBildirimAyar()&&Notification.permission==='default'){
+      Notification.requestPermission().then(p=>{if(p==='granted'){saveBildirimAyar(true);updateNotifUI();planBildirimler();baslatKaliciBildirim();}});
+    }
+  }catch(e){showError(`Vakitler alınamadı.<br><br>Hata: ${e.message}<br><br>İnternet bağlantınızı kontrol edin.`);}
+}
+
+// ─── Render ────────────────────────────────────────────────
+function getTodayIdx(){
+  const t=new Date();
+  const iso=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  const kisa=`${String(t.getDate()).padStart(2,'0')}.${String(t.getMonth()+1).padStart(2,'0')}.${t.getFullYear()}`;
+  const i=allVakitler.findIndex(v=>(v.MiladiTarihUzunIso8601||'').startsWith(iso)||(v.MiladiTarihKisa===kisa));
+  return i>=0?i:0;
+}
+function renderContent(){
+  if(!allVakitler.length){showError('Vakit verisi bulunamadı.');return;}
+  const base=getTodayIdx();
+  const idx=Math.max(0,Math.min(allVakitler.length-1,base+offsetDays));
+  const v=allVakitler[idx];
+  const prayers=[
+    {tr:'İmsak',ar:'الإمساك',icon:'🌙',time:v.Imsak},
+    {tr:'Güneş',ar:'الشروق', icon:'🌅',time:v.Gunes},
+    {tr:'Öğle', ar:'الظهر',  icon:'☀️',time:v.Ogle},
+    {tr:'İkindi',ar:'العصر', icon:'🌤',time:v.Ikindi},
+    {tr:'Akşam',ar:'المغرب', icon:'🌆',time:v.Aksam},
+    {tr:'Yatsı',ar:'العشاء', icon:'🌠',time:v.Yatsi},
+  ];
+  const isToday=offsetDays===0;
+  const nowM=new Date().getHours()*60+new Date().getMinutes();
+  const pM=prayers.map(p=>{if(!p.time)return 0;const[h,m]=p.time.split(':').map(Number);return h*60+m;});
+  let activeIdx=-1;
+  if(isToday){for(let i=pM.length-1;i>=0;i--){if(nowM>=pM[i]){activeIdx=i;break;}}}
+  const nextIdx=isToday?(activeIdx<5?activeIdx+1:0):-1;
+  const dayLabel=offsetDays===0?'Bugün':offsetDays===1?'Yarın':offsetDays===-1?'Dün':`${offsetDays>0?'+':''}${offsetDays} gün`;
+  let html=`
+    <div class="date-section">
+      <div><div class="date-hijri">${v.HicriTarihUzun||''}</div><div class="date-miladi">${v.MiladiTarihUzun||''}</div></div>
+      <div style="text-align:right;font-size:12px;color:var(--text-dim)">${ilceName?ilceName+' / ':''}${ilName}</div>
+    </div>
+    <div class="day-nav">
+      <button class="day-btn" onclick="changeDay(-1)">‹</button>
+      <span class="day-label">${dayLabel}</span>
+      <button class="day-btn" onclick="changeDay(1)">›</button>
+    </div>`;
+  if(isToday&&nextIdx>=0)html+=`
+    <div class="countdown-card">
+      <div><div class="countdown-label">Sıradaki Vakit</div>
+      <div class="countdown-name">${prayers[nextIdx].tr} &nbsp; ${prayers[nextIdx].ar}</div></div>
+      <div class="countdown-time" id="countdown">--:--</div>
+    </div>`;
+  html+='<div class="prayers-section"><div class="prayer-list">';
+  prayers.forEach((p,i)=>{
+    const cls=isToday?(i===activeIdx?'active':(i<activeIdx?'passed':'')):'';
+    html+=`<div class="prayer-card ${cls}">
+      <div class="prayer-icon">${p.icon}</div>
+      <div class="prayer-info"><div class="prayer-name-tr">${p.tr}</div><div class="prayer-name-ar">${p.ar}</div></div>
+      <div class="prayer-time-wrap">
+        <span class="prayer-time">${p.time||'--:--'}</span>
+        ${i===activeIdx&&isToday?'<span class="now-badge">● Şu an</span>':''}
+      </div></div>`;
+  });
+  html+='</div></div><div class="ornament">✦ ✦ ✦</div>';
+  document.getElementById('content').innerHTML=html;
+  if(countdownInterval)clearInterval(countdownInterval);
+  if(isToday&&nextIdx>=0)startCountdown(prayers[nextIdx].time);
+}
+function startCountdown(t){
+  const[th,tm]=t.split(':').map(Number);
+  function upd(){
+    const el=document.getElementById('countdown');if(!el){clearInterval(countdownInterval);return;}
+    const now=new Date(),target=new Date();target.setHours(th,tm,0,0);
+    if(target<=now)target.setDate(target.getDate()+1);
+    const d=target-now;
+    const h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);
+    el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  upd();countdownInterval=setInterval(upd,1000);
+}
+function changeDay(d){offsetDays+=d;if(countdownInterval)clearInterval(countdownInterval);renderContent();}
+function showLoading(msg){if(countdownInterval)clearInterval(countdownInterval);document.getElementById('content').innerHTML=`<div class="loading"><div class="loading-ring"></div><div class="loading-text">${msg}</div></div>`;}
+function showError(msg){if(countdownInterval)clearInterval(countdownInterval);document.getElementById('content').innerHTML=`<div class="error-msg">${msg}</div>`;}
+
+// ─── Tema ──────────────────────────────────────────────────
+const TEMALAR=['','tema-yesil','tema-mor','tema-toprak','tema-bej','tema-kirmizi'];
+function setTema(dotEl,tema){
+  TEMALAR.forEach(t=>{if(t)document.body.classList.remove(t);});
+  if(tema)document.body.classList.add(tema);
+  document.querySelectorAll('.theme-dot').forEach(d=>d.classList.remove('active'));
+  if(dotEl)dotEl.classList.add('active');
+  try{localStorage.setItem('namaz_tema',tema);}catch(e){}
+}
+function applySavedTema(){
+  try{const t=localStorage.getItem('namaz_tema')||'';
+    if(t)document.body.classList.add(t);
+    document.querySelectorAll('.theme-dot').forEach(d=>{
+      if(d.dataset.tema===t)d.classList.add('active');else d.classList.remove('active');
+    });}catch(e){}
+}
+
+// ─── Init ──────────────────────────────────────────────────
+applySavedTema();
+updateNotifUI();
+loadIller();
+
+loadIller();
+</script>
+</body>
+</html>
