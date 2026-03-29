@@ -1,1 +1,11 @@
 
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.memed3.twa",
+    "sha256_cert_fingerprints": [
+      "DB:6A:E1:B2:90:41:FF:8B:4A:B7:D6:46:9B:DA:FC:E7:E8:21:74:DF:2B:CA:5A:0B:A7:23:D8:EC:E7:D5:91:87"
+    ]
+  }
+}]
